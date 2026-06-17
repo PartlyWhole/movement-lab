@@ -1246,13 +1246,13 @@ while True:
 
       // ---- guided steps ----
       const STEPS = [
-        { kind: "slot", key: "t1", q: 'A moving object carries two numbers: its <b style="color:#5ad1e8">position</b> and its <b style="color:#6ee7a0">velocity</b>. Acceleration (gravity!) acts on one of them first. The <b>first</b> update line should change which?', opts: [{ t: "vel", ok: true }, { t: "pos" }], why: "Acceleration is change-of-velocity — it reaches position only through velocity.", wrong: "Gravity doesn't move you directly; it speeds up your velocity first. Change vel." },
-        { kind: "slot", key: "op1", q: 'Do we <b>add to</b> the current velocity, or <b>replace</b> it outright each frame?', opts: [{ t: "+=", ok: true }, { t: "=" }], why: "+= accumulates — last frame's speed plus this frame's nudge. = would erase it.", wrong: "= throws away the speed you already built up every frame. Use += to keep it." },
-        { kind: "slot", key: "o1", q: 'Add <b>what</b> to velocity each frame — the quantity that means “change-in-velocity”?', opts: [{ t: "acc", ok: true }, { t: "pos" }], why: "acc is acceleration: exactly how much velocity changes per frame.", wrong: "Position isn't what changes velocity. Acceleration is. Add acc." },
-        { kind: "q", key: "q1", q: '<b style="color:#ffd166">Think first.</b> Velocity is updated. Position has to move next — but acceleration never touches position directly. So how does gravity ever pull you <b>down</b>?', opts: [{ t: "Through velocity — acc speeds up vel, vel moves pos", ok: true }, { t: "Acceleration is added straight onto position" }], why: "Exactly the chain: acc → vel → pos. That's why we needed line 1 before line 2.", wrong: "No — acceleration only ever changes velocity. Position moves by velocity. It's a chain." },
-        { kind: "slot", key: "t2", q: 'The <b>second</b> line updates which variable?', opts: [{ t: "pos", ok: true }, { t: "acc" }], why: "Now we move the position using the velocity we just updated.", wrong: "acc is an input, not something we move. Line 2 updates pos." },
-        { kind: "slot", key: "op2", q: 'Same question for position — add to it, or replace it?', opts: [{ t: "+=", ok: true }, { t: "=" }], why: "+= moves it relative to where it already is.", wrong: "= would teleport it to a tiny value every frame. Use +=." },
-        { kind: "slot", key: "o2", q: 'Move position by <b>what</b> — how far you travel this frame?', opts: [{ t: "vel", ok: true }, { t: "acc" }], why: "You move by your velocity. Acceleration only feeds velocity.", wrong: "Adding acc here double-counts it. You move by vel." },
+        { kind: "slot", key: "t1", q: 'Picture footsteps. <b style="color:#5ad1e8">Where you stand</b> is <code style="color:#5ad1e8">pos</code>. <b style="color:#6ee7a0">How big your step is</b> is <code style="color:#6ee7a0">vel</code>. Gravity is a tiny tug that makes your step a little bigger every frame. So the <b>first</b> line should change… which one?', opts: [{ t: "vel", ok: true }, { t: "pos" }], why: 'Right — gravity grows your <b>step size</b> first. → <code style="color:#6ee7a0">vel</code> is your velocity; acceleration changes it before anything moves.', wrong: "Gravity doesn't jump you to a new spot — it first makes your <b>step</b> bigger. → change vel, not pos." },
+        { kind: "slot", key: "op1", q: 'Make the step <b>a little bigger than it already is</b> (<code style="color:#ff6ec7">+=</code>), or <b>throw away the old step</b> and set a brand-new one (<code style="color:#ff6ec7">=</code>)?', opts: [{ t: "+=", ok: true }, { t: "=" }], why: 'Yes — <code style="color:#ff6ec7">+=</code> means “add a bit to what you’ve got,” so speed builds up. → <code style="color:#ff6ec7">=</code> would erase your speed every frame and you’d never get going.', wrong: "= wipes out the speed you already built. We want to <b>add</b> a little each frame → use +=." },
+        { kind: "slot", key: "o1", q: 'Your step grows by a little bit each frame. What’s that little bit — gravity’s tug <code style="color:#5ad1e8">acc</code>, or your spot <code style="color:#5ad1e8">pos</code>?', opts: [{ t: "acc", ok: true }, { t: "pos" }], why: 'That’s it — <code style="color:#5ad1e8">acc</code> (acceleration) is exactly “how much bigger your step gets each frame.” → for a jump, that’s gravity.', wrong: "Your spot can’t make your step grow. The <b>tug</b> does → add acc." },
+        { kind: "q", key: "q1", q: '<b style="color:#ffd166">Think first.</b> Gravity only ever changes your <b>step size</b> — it never grabs your <b>spot</b> directly. So how does gravity ever actually pull you down?', opts: [{ t: "It grows your step, and the bigger step moves you", ok: true }, { t: "It pulls your spot straight down by itself" }], why: "Exactly — it’s a chain: gravity → bigger step → you move farther. That’s why we grow the step first, then move.", wrong: "Gravity never touches your spot directly. It makes your <b>step</b> bigger, and the step is what moves you. → it’s a chain." },
+        { kind: "slot", key: "t2", q: 'Now your step is the right size. The <b>second</b> line finally <b>moves</b> you. So it changes your spot <code style="color:#5ad1e8">pos</code>, or the tug <code style="color:#5ad1e8">acc</code>?', opts: [{ t: "pos", ok: true }, { t: "acc" }], why: 'Yes — line 2 moves your <b>spot</b>. → <code style="color:#6ee7a0">pos</code> is your position; this is the step actually happening.', wrong: "acc is just the tug, not where you are. Line 2 moves your <b>spot</b> → pos." },
+        { kind: "slot", key: "op2", q: 'Add the step to where you already are (<code style="color:#ff6ec7">+=</code>), or jump to a brand-new spot from zero (<code style="color:#ff6ec7">=</code>)?', opts: [{ t: "+=", ok: true }, { t: "=" }], why: 'Right — you move <b>from where you already are</b>, so <code style="color:#ff6ec7">+=</code>. → <code style="color:#ff6ec7">=</code> would snap you back to a tiny number every frame.', wrong: "= would forget where you were and teleport you. You move from your current spot → +=." },
+        { kind: "slot", key: "o2", q: 'You take a step. How far do you go — by your step size <code style="color:#6ee7a0">vel</code>, or by the tug <code style="color:#5ad1e8">acc</code>?', opts: [{ t: "vel", ok: true }, { t: "acc" }], why: "Yes — you move by how big your step is, vel. → the tug already did its job growing the step; here you just walk.", wrong: "The tug only grows the step; it doesn’t move you by itself. You move by your <b>step</b> → vel." },
       ];
 
       function tok(key) {
@@ -1268,12 +1268,12 @@ while True:
       }
       function tokenBreakdown() {
         const toks = [
-          ["vel", "the object's speed — pixels moved per frame", "#6ee7a0"],
-          ["+=", "add to it (accumulate); don't replace", "#ff6ec7"],
-          ["acc", "acceleration — how much velocity changes per frame (gravity)", "#5ad1e8"],
-          ["pos", "the object's position on screen", "#6ee7a0"],
-          ["+=", "move it, building on where it already is", "#ff6ec7"],
-          ["vel", "move BY the velocity you just updated — the chain in action", "#5ad1e8"],
+          ["vel", "how big your step is: how far you move this frame", "#6ee7a0"],
+          ["+=", "make it a little bigger (add to what you've got)", "#ff6ec7"],
+          ["acc", "how much bigger your step gets each frame: gravity's tug", "#5ad1e8"],
+          ["pos", "where you are: your spot on the screen", "#6ee7a0"],
+          ["+=", "move from where you already are", "#ff6ec7"],
+          ["vel", "…by your step size: the very step you just grew", "#5ad1e8"],
         ];
         return toks.map((t) => `<div style="display:flex;gap:14px;align-items:baseline;padding:6px 0;border-bottom:1px solid #11151f;"><code style="flex:0 0 60px;color:${t[2]};font-size:14px;font-weight:700">${t[0]}</code><span style="color:#aab0c4;font-size:12.5px;line-height:1.5">${t[1]}</span></div>`).join("");
       }
@@ -1326,7 +1326,7 @@ while True:
 
         if (st.phase === "intro") {
           slotsEl.style.display = "none";
-          stepEl.innerHTML = `<b style="color:#ffd166">Before any code.</b> Watch the looping jump on the left — a box with a <b style="color:#5ad1e8">velocity</b> and a constant <b style="color:#ff6ec7">acceleration</b> (gravity). <b style="color:#fff">In your own words: what has to change each frame to make something move <i>and</i> speed up?</b>`;
+          stepEl.innerHTML = `<b style="color:#ffd166">Before any code.</b> Watch the box bounce on the left. Every frame it does two little things: it speeds up a tiny bit, and it moves. <b style="color:#fff">In your own words — what has to change each frame to make something move <i>and</i> get faster?</b>`;
           const ta = document.createElement("textarea");
           ta.placeholder = "Type your reasoning… (no code — just the idea)";
           ta.value = st.explain || "";
@@ -1366,15 +1366,15 @@ while True:
           });
         } else if (st.phase === "done") {
           slotsEl.style.display = ""; slotsEl.innerHTML = slotPanel();
-          stepEl.innerHTML = `<b style="color:#9be88f">That's the update step.</b> Two lines, run every frame: <i style="color:#cdd3e6">acceleration feeds velocity, velocity feeds position.</i> But does the <b>order</b> of those two lines matter? Let's find out.`;
+          stepEl.innerHTML = `<b style="color:#9be88f">That's the update step.</b> Two tiny lines, every frame: <i style="color:#cdd3e6">grow your step a little (vel += acc), then take the step (pos += vel).</i> But does it matter which one you do <b>first</b>? Let's see.`;
           nextEl.style.display = ""; nextEl.textContent = "See why order matters →"; nextEl.onclick = () => { st.phase = "kick"; buildKickControls(); renderUI(); };
         } else if (st.phase === "kick") {
           slotsEl.style.display = "none";
-          stepEl.innerHTML = `<b style="color:#ffd166">Order matters.</b> <span style="color:#6ee7a0">A</span> updates velocity <i>then</i> position (semi-implicit Euler — what games use). <span style="color:#ff8fb8">B</span> moves position <i>then</i> updates velocity (explicit Euler). Same numbers, but <b style="color:#fff">B drifts</b> — it uses last frame's stale velocity and quietly gains energy. Step them and read Δ.`;
+          stepEl.innerHTML = `<b style="color:#ffd166">Order matters!</b> <span style="color:#6ee7a0">A</span> grows the step <i>first</i>, then moves — like checking how big a hop to take before you jump. <span style="color:#ff8fb8">B</span> moves <i>first</i>, then grows the step — hopping on the old, smaller step. Same pieces, but <b style="color:#fff">B drifts off</b>. <span style="color:#7a8099">(Grown-ups call A “semi-implicit Euler” — it's what games use.)</span> Step them and watch the gap Δ.`;
           nextEl.style.display = ""; nextEl.textContent = "Read it token by token →"; nextEl.onclick = () => { st.phase = "reveal"; renderUI(); };
         } else { // reveal
           slotsEl.style.display = "none";
-          stepEl.innerHTML = `<b style="color:#9be88f">The whole engine, in two lines.</b> Almost every game runs <code style="color:#fff">vel += acc</code> then <code style="color:#fff">pos += vel</code> every frame. Read each token below.`;
+          stepEl.innerHTML = `<b style="color:#9be88f">The whole engine, in two lines.</b> Almost every game does this every frame: grow the step, then move — <code style="color:#fff">vel += acc</code> then <code style="color:#fff">pos += vel</code>. Here's every piece in plain words.`;
           const tb = el("[data-btokens]"); if (tb) tb.innerHTML = tokenBreakdown();
         }
         updateCond();
