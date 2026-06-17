@@ -859,10 +859,11 @@ while True:
       const ctrlEl = sec.querySelector("[data-controls]");
       const accent = cfg.accent;
       let s, autoIv = null, autoBtn = null;
+      const overrides = {};   // dragged param values that persist across reset/init
       function render() { cfg.draw(ctx, c, s); if (statusEl) statusEl.innerHTML = cfg.readout(s); }
       function stopAuto() { if (autoIv) { clearInterval(autoIv); autoIv = null; } if (autoBtn) autoBtn.textContent = "AUTO ▸"; }
       function step() { s.frame++; cfg.step(s, c); if (s.history.length > (cfg.trailMax || 160)) s.history.shift(); render(); }
-      function reset() { stopAuto(); s = cfg.init(c); s.frame = 0; s.history = []; render(); }
+      function reset() { stopAuto(); s = cfg.init(c); Object.assign(s, overrides); s.frame = 0; s.history = []; render(); if (cfg._upd) cfg._upd.forEach((u) => u()); }
       // controls
       ctrlEl.innerHTML = "";
       const row = document.createElement("div");
@@ -877,27 +878,32 @@ while True:
       }
       (cfg.extra || []).forEach((ex) => { const b = ctrlBtn(ex.label, accent); b.onclick = () => { ex.fn(s); render(); }; row.append(b); });
       ctrlEl.appendChild(row);
-      // param steppers
+      // param sliders — drag to tweak; live for physics params, restart for
+      // initial-condition params (p.init). Values persist via `overrides`.
       if (cfg.params) {
         const pwrap = document.createElement("div");
         pwrap.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;";
         cfg.params.forEach((p) => {
           const bx = document.createElement("div");
-          bx.style.cssText = "display:flex;align-items:center;gap:6px;background:#0c0f1a;border:2px solid #1d2333;padding:5px 7px;";
+          bx.style.cssText = "display:flex;align-items:center;gap:9px;background:#0c0f1a;border:2px solid #1d2333;padding:6px 10px;";
           const lab = document.createElement("span"); lab.style.cssText = `font-family:'Press Start 2P',monospace;font-size:7.5px;color:${accent};`; lab.textContent = p.label;
-          const minus = miniBtn("−"), plus = miniBtn("+");
-          const val = document.createElement("span"); val.style.cssText = "min-width:46px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#fff;";
+          const slider = document.createElement("input");
+          slider.type = "range"; slider.min = p.min; slider.max = p.max; slider.step = p.step; slider.value = p.def != null ? p.def : p.min;
+          slider.style.cssText = `width:104px;accent-color:${accent};cursor:pointer;vertical-align:middle;`;
+          const val = document.createElement("span"); val.style.cssText = "min-width:42px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#fff;";
           const fmt = p.fmt || ((v) => v);
-          const upd = () => { val.textContent = fmt(s[p.key]); };
-          const change = (d) => { s[p.key] = clamp(+(s[p.key] + d).toFixed(4), p.min, p.max); upd(); if (p.init) reset(); else render(); };
-          minus.onclick = () => change(-p.step); plus.onclick = () => change(p.step);
-          bx.append(lab, minus, val, plus); pwrap.appendChild(bx);
+          const upd = () => { val.textContent = fmt(s[p.key]); slider.value = s[p.key]; };
+          slider.addEventListener("input", () => {
+            const v = clamp(+(+slider.value).toFixed(4), p.min, p.max);
+            s[p.key] = v; overrides[p.key] = v; val.textContent = fmt(v);
+            if (p.init) reset(); else render();
+          });
+          bx.append(lab, slider, val); pwrap.appendChild(bx);
           cfg._upd = cfg._upd || []; cfg._upd.push(upd);
         });
         ctrlEl.appendChild(pwrap);
       }
       reset();
-      if (cfg._upd) cfg._upd.forEach((u) => u());
     }
 
     // ===== LESSON + REFERENCE STEP-THE-FRAME DEMOS =====
